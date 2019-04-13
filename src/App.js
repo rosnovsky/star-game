@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './App.css';
 
 const Button = props => {
@@ -12,16 +12,46 @@ const Button = props => {
   )
 }
 
-const Star = props => {
-  return <div className="star" />
+const Stars = props => {
+  return utils.range(1, props.count).map(starId =>
+    <div className="star" key={starId} />
+  )
+}
+
+const PlayAgain = (props) => {
+  return (
+    <div className="game-done">
+      <div className="message" style={{ color: props.gameStatus === "lost" ? "red" : "green" }}>{props.gameStatus === "lost" ? "No time left :(" : "You Won!"}</div>
+      <button onClick={props.onClick}>Play</button>
+    </div>
+  )
 }
 
 const App = () => {
   const [stars, setStars] = useState(utils.random(1, 9));
   const [availableNums, setAvailableNums] = useState(utils.range(1, 9));
   const [candidateNums, setCandidateNums] = useState([]);
+  const [secondsLeft, setSecondsLeft] = useState(15)
+
+  useEffect(() => {
+    if (secondsLeft > 0 && availableNums.length > 0) {
+      const timerId = setTimeout(() => {
+        setSecondsLeft(secondsLeft - 1)
+      }, 1000)
+      return () => clearTimeout(timerId)
+    }
+  })
+
+  const gameStatus = availableNums.length === 0 ? "won" : secondsLeft === 0 ? "lost" : "inProgress"
 
   const candidatesAreWrong = utils.sum(candidateNums) > stars
+
+  const resetGame = () => {
+    setStars(utils.random(1, 9))
+    setAvailableNums(utils.range(1, 9))
+    setCandidateNums([])
+    setSecondsLeft(15)
+  }
 
   const numberStatus = (number) => {
     if (!availableNums.includes(number)) {
@@ -34,10 +64,14 @@ const App = () => {
   }
 
   const onButtonClick = (number, currentStatus) => {
-    if (currentStatus === "used") {
+    if (currentStatus === "used" || gameStatus !== "inProgress") {
       return;
     }
-    const newCandidateNums = candidateNums.concat(number);
+    const newCandidateNums =
+      currentStatus === "available"
+        ? candidateNums.concat(number)
+        : candidateNums.filter(cn => cn !== number)
+
     if (utils.sum(newCandidateNums) !== stars) {
       setCandidateNums(newCandidateNums)
     } else {
@@ -57,9 +91,10 @@ const App = () => {
       </div>
       <div className="body">
         <div className="left">
-          {utils.range(1, stars).map(starId =>
-            <Star key={starId} />
-          )}
+          {gameStatus !== "inProgress"
+            ? <PlayAgain onClick={resetGame} gameStatus={gameStatus} />
+            : <Stars count={stars} />
+          }
         </div>
         <div className="right">
           {utils.range(1, 9).map(number =>
@@ -72,7 +107,7 @@ const App = () => {
 
         </div>
       </div>
-      <div className="timer">Time Remaining: 10</div>
+      <div className="timer">Time Remaining: {secondsLeft}</div>
     </div>
   );
 }

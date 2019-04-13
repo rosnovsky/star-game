@@ -27,7 +27,7 @@ const PlayAgain = (props) => {
   )
 }
 
-const App = () => {
+const Game = (props) => {
   const [stars, setStars] = useState(utils.random(1, 9));
   const [availableNums, setAvailableNums] = useState(utils.range(1, 9));
   const [candidateNums, setCandidateNums] = useState([]);
@@ -92,7 +92,7 @@ const App = () => {
       <div className="body">
         <div className="left">
           {gameStatus !== "inProgress"
-            ? <PlayAgain onClick={resetGame} gameStatus={gameStatus} />
+            ? <PlayAgain onClick={props.startNewGame} gameStatus={gameStatus} />
             : <Stars count={stars} />
           }
         </div>
@@ -110,6 +110,11 @@ const App = () => {
       <div className="timer">Time Remaining: {secondsLeft}</div>
     </div>
   );
+}
+
+const App = () => {
+  const [gameId, setGameId] = useState(1)
+  return <Game key={gameId} startNewGame={() => setGameId(gameId + 1)} />
 }
 // Colors
 const colors = {
